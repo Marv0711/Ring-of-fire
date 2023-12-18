@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Game } from '../../models/game';
 import { DialogAddPlayerComponent } from '../dialog-add-player/dialog-add-player.component';
 import { MatDialog } from '@angular/material/dialog';
+import { Firestore, collection, collectionData, onSnapshot } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
 
 
 @Component({
@@ -14,8 +16,33 @@ export class GameComponent implements OnInit{
   pickCardAnimation = false;
   game: Game = new Game();
   currentCard: any = '';
+  games = [];
+  unsubGames;
 
-  constructor(public dialog: MatDialog) {}
+
+  firestore: Firestore = inject(Firestore);
+  
+
+  constructor(public dialog: MatDialog) {
+    this.unsubGames = this.subGameList();
+  }
+
+  subGameList(){
+    return onSnapshot(this.getGameRef(), (list) => {
+      this.games = [];
+      list.forEach(element => {
+        console.log(element.data());
+      });
+    });
+  }
+
+  getGameRef(){
+    return collection(this.firestore, 'ringoffire');
+  }
+
+  ngOnDestroy(){
+    this.unsubGames();
+  }
   
   ngOnInit(): void {
     this.newGame();
