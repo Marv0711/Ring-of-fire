@@ -52,6 +52,7 @@ export class GameComponent implements OnInit {
     return onSnapshot(this.getGameRef(), (list) => {
       list.forEach(element => {
         this.games = element.data();
+        console.log(this.games);
       });
     });
   }
@@ -60,9 +61,12 @@ export class GameComponent implements OnInit {
     return collection(this.firestore, 'ringoffire');
   }
 
-  async addNote(game:any) {
+  async addNote() {
     const docRef = await addDoc((this.getGameRef()), {
-      game
+      currentPlayer: this.game.currentPlayer,
+      playedCards:  this.game.playedCards,
+      players: this.game.players,
+      stack: this.game.stack
     });
     console.log("Document written with ID: ", docRef.id);
   }
@@ -75,11 +79,12 @@ export class GameComponent implements OnInit {
     this.newGame();
     this.route.params.subscribe((params) => {
       console.log(params['id']);
-      this.UpdateGame(this.game.toJson(), params['id']);
+     this.UpdateGame(this.game, params['id']);
     })
   }
 
   newGame() {
+    //this.addNote();
     this.game = new Game();
   }
 
