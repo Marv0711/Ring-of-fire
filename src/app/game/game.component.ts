@@ -20,6 +20,7 @@ export class GameComponent implements OnInit {
   games:any;
   unsubGames;
   unsubCurrentGame;
+  currentParms:any;
 
 
   firestore: Firestore = inject(Firestore);
@@ -27,14 +28,19 @@ export class GameComponent implements OnInit {
 
   constructor(private route: ActivatedRoute ,public dialog: MatDialog) {
     this.unsubGames = this.subGameList();
-    this.unsubCurrentGame = this.subCurrentGame("WlklxbHIj01LDR7iVS6Z");
+    this.unsubCurrentGame = this.subCurrentGame();
   }
 
-  subCurrentGame(gameID:string){
-    return onSnapshot(this.getSingelDocRef("ringoffire", gameID), (list) => {
-      //this.trashNotes = [];
-      list.data(element => {
-        console.log(this.setNoteObject(element.data(), element.id));
+  subCurrentGame(){
+    return onSnapshot(this.getGameRef(), (list) => {
+      list.forEach(element => {
+        if(element.id == this.currentParms['id']){
+          this.game.currentPlayer = element.data()['currentPlayer'];
+          this.game.playedCards = element.data()['playedCards'];
+          this.game.players = element.data()['players'];
+          this.game.stack = element.data()['stack'];
+          console.log(this.game);
+        }
       });
     });
   }
@@ -73,7 +79,6 @@ export class GameComponent implements OnInit {
     return onSnapshot(this.getGameRef(), (list) => {
       list.forEach(element => {
         this.games = element.data();
-        console.log(this.games);
       });
     });
   }
@@ -99,7 +104,7 @@ export class GameComponent implements OnInit {
   ngOnInit(): void {
     this.newGame();
     this.route.params.subscribe((params) => {
-      console.log(params['id']);
+      this.currentParms = params
      this.UpdateGame(this.game, params['id']);
     })
   }
