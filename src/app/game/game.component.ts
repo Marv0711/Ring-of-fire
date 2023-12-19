@@ -19,6 +19,7 @@ export class GameComponent implements OnInit {
   currentCard: any = '';
   games:any;
   unsubGames;
+  unsubCurrentGame;
 
 
   firestore: Firestore = inject(Firestore);
@@ -26,7 +27,27 @@ export class GameComponent implements OnInit {
 
   constructor(private route: ActivatedRoute ,public dialog: MatDialog) {
     this.unsubGames = this.subGameList();
+    this.unsubCurrentGame = this.subCurrentGame("WlklxbHIj01LDR7iVS6Z");
   }
+
+  subCurrentGame(gameID:string){
+    return onSnapshot(this.getSingelDocRef("ringoffire", gameID), (list) => {
+      //this.trashNotes = [];
+      list.data(element => {
+        console.log(this.setNoteObject(element.data(), element.id));
+      });
+    });
+  }
+
+  setNoteObject(obj: any, id: string){
+    return{
+      id: id,
+      type: obj.type || "",
+      title: obj.title || "",
+      content: obj.content || "",
+      marked: obj.marked || false 
+    }
+   }
 
   async UpdateGame(currentGame:any, gameID:string) {
     let gameRef = this.getSingelDocRef("ringoffire", gameID);
