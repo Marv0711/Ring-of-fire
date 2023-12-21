@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DocumentData, Firestore, addDoc, collection, collectionData, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { EditPlayerComponent } from '../edit-player/edit-player.component';
 
 
 @Component({
@@ -14,9 +15,7 @@ import { ActivatedRoute } from '@angular/router';
 })
 
 export class GameComponent implements OnInit {
-  pickCardAnimation = false;
   game: Game = new Game();
-  currentCard: any = '';
   games:any;
   unsubGames;
   unsubCurrentGame;
@@ -36,10 +35,12 @@ export class GameComponent implements OnInit {
       list.forEach(element => {
         if(element.id == this.currentParms['id']){
           this.game.currentPlayer = element.data()['currentPlayer'];
+          this.game.images = element.data()['images'];
           this.game.playedCards = element.data()['playedCards'];
           this.game.players = element.data()['players'];
           this.game.stack = element.data()['stack'];
-          console.log(this.game);
+          this.game.pickCardAnimation = element.data()['pickCardAnimation'];
+          this.game.currentCard = element.data()['currentCard'];
         }
       });
     });
@@ -55,9 +56,12 @@ export class GameComponent implements OnInit {
     }
    }
 
-  async UpdateGame(currentGame:any, gameID:string) {
+   UpdateGame() {
+    let currentGame = this.game;
+    
+    let gameID = this.currentParms['id'];
     let gameRef = this.getSingelDocRef("ringoffire", gameID);
-    await updateDoc(gameRef, this.getcleanJSON(currentGame)).catch(
+     updateDoc(gameRef, this.getcleanJSON(currentGame)).catch(
       (err) => { console.error(err) }
     );
   };
@@ -65,9 +69,12 @@ export class GameComponent implements OnInit {
   getcleanJSON(currentGame:any){
     return{
       currentPlayer: currentGame.currentPlayer,
+      images: currentGame.images,
       playedCards: currentGame.playedCards,
       players: currentGame.players,
-      stack: currentGame.stack
+      stack: currentGame.stack,
+      pickCardAnimation: currentGame.pickCardAnimation,
+      currentCard: currentGame.currentCard
     }
   }
 
@@ -87,45 +94,34 @@ export class GameComponent implements OnInit {
     return collection(this.firestore, 'ringoffire');
   }
 
-  async addNote() {
-    const docRef = await addDoc((this.getGameRef()), {
-      currentPlayer: this.game.currentPlayer,
-      playedCards:  this.game.playedCards,
-      players: this.game.players,
-      stack: this.game.stack
-    });
-    console.log("Document written with ID: ", docRef.id);
-  }
-
   ngOnDestroy() {
     this.unsubGames();
+    this.unsubCurrentGame();
   }
 
   ngOnInit(): void {
     this.newGame();
     this.route.params.subscribe((params) => {
       this.currentParms = params
-     this.UpdateGame(this.game, params['id']);
     })
   }
 
   newGame() {
-    //this.addNote();
     this.game = new Game();
   }
 
   pickCard() {
-    if (!this.pickCardAnimation) {
-      this.currentCard = this.game.stack.pop();
-      this.pickCardAnimation = true;
-      this.game.playedCards.push(this.currentCard);
+    if (!this.game.pickCardAnimation) {
+      this.game.currentCard = this.game.stack.pop();
+      this.game.pickCardAnimation = true;
+      this.game.playedCards.push(this.game.currentCard);
+      this.game.currentPlayer++;
+      this.game.currentPlayer = this.game.currentPlayer % this.game.players.length;
     }
-
-    this.game.currentPlayer++;
-    this.game.currentPlayer = this.game.currentPlayer % this.game.players.length;
     setTimeout(() => {
-      this.pickCardAnimation = false;
+      this.game.pickCardAnimation = false;
     }, 1500);
+    this.UpdateGame();
   }
 
   openDialog(): void {
@@ -134,6 +130,19 @@ export class GameComponent implements OnInit {
     dialogRef.afterClosed().subscribe((name: string) => {
       if (name && name.length > 0) {
         this.game.players.push(name)
+        this.game.images.push('1.webp')
+        this.UpdateGame();
+      }
+    });
+  }
+
+  editPlayer(playerId:number){
+    const dialogRef = this.dialog.open(EditPlayerComponent);
+
+    dialogRef.afterClosed().subscribe((change: string) => {
+      if(change){
+        this.game.images[playerId] = change;
+        this.UpdateGame();
       }
     });
   }

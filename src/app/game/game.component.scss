@@ -12,6 +12,7 @@
 
 .card-stack{
     position: relative;
+    left: 100px;
 
     img{
         position: absolute;
@@ -31,11 +32,20 @@
 
 .pick-card{
     animation: pick-card-animation 1s ease-in-out forwards;
+
+    @media screen and (max-width: 511px) {
+        right: 139px !important;
+    }
 }
 
 .player-position{
     position: absolute;
     right: 0;
+    z-index: 1;
+}
+
+app-player {
+    cursor: pointer;
 }
 
 @keyframes pick-card-animation{
@@ -62,6 +72,11 @@
     bottom: 32px;
     left: 100px;
     right: 100px;
+
+    @media screen and (max-width: 511px) {
+        min-width: 200px;
+        left: 1px !important;
+    }
 }
 
 
